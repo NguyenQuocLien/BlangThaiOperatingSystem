@@ -154,5 +154,9 @@ msg_vbe_ok     db "VBE Mode OK (1024x768x32)", 0x0D, 0x0A, 0
 msg_vbe_fail   db "ERROR: VBE not supported!", 0x0D, 0x0A, 0
 msg_pm_ok      db "Protected Mode OK", 0
 
+msg_mem_detect db "Detecting Memory (E820)...", 0x0D, 0x0A, 0
+msg_mem_ok     db "Memory Map OK", 0x0D, 0x0A, 0
+msg_mem_fail   db "Memory detection failed (using default)", 0x0D, 0x0A, 0
+
 times 510-($-$$) db 0
 dw 0xaa55
