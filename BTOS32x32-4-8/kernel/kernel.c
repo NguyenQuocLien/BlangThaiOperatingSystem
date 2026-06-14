@@ -2,27 +2,44 @@
 #include "include/hardware.h"
 #include "include/usb.h"
 
+// Khai báo từ linker.ld (sẽ thêm symbol ở bước sau)
+extern uint32_t _bss_start;
+extern uint32_t _bss_end;
+
 // Khai báo hàm từ shell
 extern void start_btos_shell(struct btos_hardware_profile *hw);
 
-// Hàm khởi tạo kernel chính (điểm vào từ bootloader)
+// Hàm xóa vùng BSS
+static void clear_bss(void) {
+    uint8_t *bss = (uint8_t *)&_bss_start;
+    uint8_t *bss_end = (uint8_t *)&_bss_end;
+    
+    while (bss < bss_end) {
+        *bss++ = 0;
+    }
+}
+
+// Điểm vào chính của Kernel (bootloader nhảy vào đây)
 void kernel_main(void) {
-    // Khởi tạo cấu trúc thông tin phần cứng
+    // 1. Xóa vùng BSS trước khi dùng biến toàn cục
+    clear_bss();
+    
+    // 2. Khởi tạo cấu trúc thông tin phần cứng
     struct btos_hardware_profile hw = {0};
     
-    // Thiết lập thông tin màn hình (lấy từ VBE bootloader đã bật)
-    hw.video_framebuffer = (uint32_t*)0xFD000000;   // Linear Framebuffer (có thể điều chỉnh sau)
+    // Thông tin màn hình từ VBE (bootloader đã bật 1024x768x32)
+    hw.video_framebuffer = (uint32_t*)0xFD000000;
     hw.screen_width      = 1024;
     hw.screen_height     = 768;
-    hw.screen_pitch      = 1024 * 4;                // 4 bytes/pixel (32-bit ARGB)
+    hw.screen_pitch      = 1024 * 4;
     
-    // Khởi tạo USB EHCI (địa chỉ MMIO mẫu, bạn có thể thay sau khi có PCI scan)
+    // 3. Khởi tạo USB EHCI (địa chỉ mẫu)
     btos_usb_init(0xFEB00000);
     
-    // Chuyển sang Shell GUI (chuột + vẽ màn hình)
+    // 4. Chuyển quyền điều khiển sang Shell GUI
     start_btos_shell(&hw);
     
-    // Vòng lặp an toàn nếu shell thoát
+    // 5. Vòng lặp an toàn
     while (1) {
         __asm__ __volatile__("hlt");
     }
