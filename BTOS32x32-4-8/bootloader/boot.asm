@@ -43,31 +43,27 @@ start:
     mov si, msg_mem_detect
     call print_string
 
-    mov di, 0x8000          ; Vùng nhớ để lưu Memory Map
-    xor ebx, ebx            ; Continuation = 0 (bắt đầu)
-    mov edx, 0x534D4150     ; 'SMAP'
-    mov ecx, 24             ; Kích thước 1 entry (24 byte)
-    mov eax, 0xE820
-    int 0x15
-    jc .mem_error
-
-    mov [0x7FF0], word 0    ; Đếm số entry
+    mov di, 0x8000          ; Vùng lưu Memory Map
+    xor ebx, ebx
+    mov word [0x7FF0], 0    ; Số entry = 0
 
 .mem_loop:
-    add di, 24
-    inc word [0x7FF0]       ; Tăng số entry
-
-    test ebx, ebx
-    jz .mem_done            ; ebx = 0 → hết map
-
     mov eax, 0xE820
+    mov edx, 0x534D4150     ; 'SMAP'
     mov ecx, 24
-    mov edx, 0x534D4150
     int 0x15
     jc .mem_error
-    jmp .mem_loop
 
-.mem_done:
+    ; Kiểm tra chữ ký SMAP
+    cmp eax, 0x534D4150
+    jne .mem_error
+
+    inc word [0x7FF0]       ; Tăng số entry
+    add di, 24              ; Chuẩn bị entry tiếp theo
+
+    test ebx, ebx
+    jnz .mem_loop           ; Còn entry thì tiếp tục
+
     mov si, msg_mem_ok
     call print_string
     jmp .continue_pm
@@ -75,7 +71,7 @@ start:
 .mem_error:
     mov si, msg_mem_fail
     call print_string
-    ; Vẫn tiếp tục (dùng giá trị mặc định)
+    ; Tiếp tục với giá trị mặc định
 
 .continue_pm:
 
