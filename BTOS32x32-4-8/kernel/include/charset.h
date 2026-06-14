@@ -5,9 +5,11 @@
 
 // 3 bảng mã hỗ trợ
 typedef enum {
-    CHARSET_ASCII = 0,
-    CHARSET_VSCII = 1,
-    CHARSET_VISCII = 2
+    CHARSET_ASCII       = 0,
+    CHARSET_VSCII_VN1   = 1,   // VSCII VN1 (có chồng lấn C0/C1)
+    CHARSET_VSCII_VN2   = 2,   // VSCII VN2 (khuyến nghị - sạch)
+    CHARSET_VSCII_VN3   = 3,   // VSCII VN3 (tối giản)
+    CHARSET_VISCII      = 4    // VISCII (rất phổ biến)
 } charset_t;
 
 // Biến toàn cục lưu bảng mã hiện tại (mặc định ASCII)
