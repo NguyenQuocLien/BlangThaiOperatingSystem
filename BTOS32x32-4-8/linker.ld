@@ -27,7 +27,9 @@ SECTIONS
     /* Đoạn chứa dữ liệu chưa khởi tạo (Biến tĩnh) */
     .bss : AT(ADDR(.bss))
     {
+        _bss_start = .;          /* <-- THÊM DÒNG NÀY */
         *(.bss)
         *(COMMON)
+        _bss_end = .;            /* <-- THÊM DÒNG NÀY */
     }
 }
