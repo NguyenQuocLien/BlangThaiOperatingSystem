@@ -24,6 +24,29 @@ void draw_char(struct btos_hardware_profile *hw, uint32_t x, uint32_t y,
 
 // Hàm in chuỗi theo bảng mã hiện tại
 void draw_string(struct btos_hardware_profile *hw, uint32_t x, uint32_t y, 
-                 const char *str, uint32_t fg_color, uint32_t bg_color);
+                 const char *str, uint32_t fg_color, uint32_t bg_color) {
+    uint32_t cx = x;
+
+    while (*str) {
+        uint8_t ch = (uint8_t)*str++;
+
+        if (ch == 0x7F || ch == 0x08) {
+            if (cx >= 8) {
+                cx -= 8;
+                // Xóa vùng 8x16
+                for (uint32_t row = 0; row < 16; row++) {
+                    for (uint32_t col = 0; col < 8; col++) {
+                        btos_gui_draw_pixel(hw, cx + col, y + row, bg_color);
+                    }
+                }
+            }
+            continue;
+        }
+
+        draw_glyph(hw, cx, y, ch, fg_color, bg_color);
+        cx += 8;           // ngang
+        // Không tăng y ở đây (chỉ tăng khi xuống dòng)
+    }
+}
 
 #endif
