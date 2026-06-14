@@ -2,8 +2,8 @@
 BITS 16                     ; Khởi đầu ở chế độ 16-bit Real Mode mặc định
 
 start:
-    cli                     ; Tắt toàn bộ ngắt phần cứng để đảm bảo an toàn
-    xor ax, ax              ; Xóa sạch các thanh ghi đoạn về 0
+    ; Thiết lập các thanh ghi đoạn an toàn khi ở Real Mode (Chưa tắt ngắt để dùng BIOS)
+    xor ax, ax              
     mov ds, ax
     mov es, ax
     mov ss, ax
@@ -14,8 +14,24 @@ start:
     or al, 2
     out 0x92, al
 
-    ; Nạp bảng GDT (Global Descriptor Table) để định nghĩa các đoạn bộ nhớ 32-bit
-    lgdt [gdt_descriptor]
+    ; --- BẬT ĐỒ HỌA VESA VBE (Khi hệ thống ngắt BIOS còn mở) ---
+    mov ax, 0x4F02          ; Hàm thiết lập chế độ VBE
+    mov bx, 0x4118          ; Mã chế độ: 1024x768, 32-bit màu, bật Linear Framebuffer
+    int 0x10                ; Gọi ngắt BIOS để kích hoạt màn hình đồ họa
+    cmp ax, 0x004F          ; Kiểm tra xem card đồ họa có hỗ trợ không
+    jne error_no_vbe        ; Nếu sai, nhảy đến đoạn xử lý lỗi ở cuối file
+
+    ; Nhận thông tin cấu hình vùng nhớ màn hình từ BIOS
+    mov ax, 0x4F01
+    mov cx, 0x118
+    mov di, 0x7E00          ; Địa chỉ tạm để lưu thông tin cấu hình đồ họa (Mode Info Block)
+    int 0x10
+    cmp ax, 0x004F
+    jne error_no_vbe
+
+    ; --- CHUẨN BỊ BƯỚC VÀO CHẾ ĐỘ 32-BIT PROTECTED MODE ---
+    cli                     ; ĐẾN ĐÂY MỚI TẮT NGẮT HOÀN TOÀN để bảo vệ CPU
+    lgdt [gdt_descriptor]   ; Nạp bảng GDT để định nghĩa các đoạn bộ nhớ 32-bit
 
     ; Chuyển sang 32-bit Protected Mode bằng cách bật bit CR0
     mov eax, cr0
@@ -24,6 +40,11 @@ start:
 
     ; Nhảy xa (Far Jump) để xóa sạch các lệnh 16-bit còn sót trong hàng đợi CPU
     jmp CODE_SEG:init_pm
+
+; --- ĐOẠN XỬ LÝ LỖI (NẰM NGOÀI LUỒNG CHẠY CHÍNH) ---
+error_no_vbe:
+    cli
+    hlt                     ; Treo máy an toàn nếu phần cứng không hỗ trợ VESA VBE
 
 BITS 32                     ; Từ đây CPU chạy chế độ 32-bit Protected Mode
 init_pm:
