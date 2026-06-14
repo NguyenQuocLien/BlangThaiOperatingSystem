@@ -30,18 +30,7 @@ void start_btos_shell(struct btos_hardware_profile *hw) {
     hw->screen_height = 768;
     hw->screen_pitch = 1024 * 4;
 
-    // 1. Vẽ hình nền Desktop (Màu xanh lam đậm thanh lịch)
-    btos_gui_draw_rect(hw, 0, 0, hw->screen_width, hw->screen_height, 0xff1a4d80);
-
-    // 2. Vẽ Thanh Taskbar ở dưới cùng màn hình (Màu xám đen)
-    btos_gui_draw_rect(hw, 0, hw->screen_height - 40, hw->screen_width, 40, 0xff222222);
-
-    // 3. Vẽ một Cửa sổ Ứng dụng mẫu ở giữa màn hình (Màu trắng, thanh tiêu đề màu xám)
-    btos_gui_draw_rect(hw, 200, 150, 600, 400, 0xffffffff); // Thân cửa sổ
-    btos_gui_draw_rect(hw, 200, 150, 600, 30, 0xff555555);  // Thanh tiêu đề (Title Bar)
-
-    // 4. Vẽ nút "Start" giả lập trên Taskbar (Màu xanh lá)
-    btos_gui_draw_rect(hw, 5, hw->screen_height - 35, 80, 30, 0xff2ecc71);
+    // KHU VỰC GIAO DIỆN DESKTOP (ĐANG NGHIÊN CỨU)
 
     // Khởi tạo hệ thống USB (Địa chỉ MMIO mẫu)
     btos_usb_init(0xFEB00000);
