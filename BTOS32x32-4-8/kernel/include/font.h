@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-extern const uint8_t font_8x8[256][8];
+extern const uint8_t font_8x16[256][16];
 
 void draw_glyph(struct btos_hardware_profile *hw, 
                 uint32_t x, uint32_t y, 
