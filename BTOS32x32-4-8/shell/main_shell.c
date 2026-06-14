@@ -24,12 +24,21 @@ void btos_gui_draw_rect(struct btos_hardware_profile *hw, uint32_t start_x, uint
 
 // 3. HÀM THỰC THI CHÍNH CỦA SHELL GUI
 void start_btos_shell(struct btos_hardware_profile *hw) {
-    // Lấy thông tin màn hình do VBE cấp từ Bootloader
+    #include "include/charset.h"
+
+// ... code cũ ...
+
+void start_btos_shell(struct btos_hardware_profile *hw) {
+    // ... code cũ của bạn ...
+
+    // === THIẾT LẬP BẢNG MÃ MẶC ĐỊNH ===
+   
     hw->video_framebuffer = (uint32_t*)0xFD000000; // Địa chỉ LFB mẫu
     hw->screen_width = 1024;
     hw->screen_height = 768;
     hw->screen_pitch = 1024 * 4;
 
+    set_charset(CHARSET_VSCII); 
     // KHU VỰC GIAO DIỆN DESKTOP (ĐANG NGHIÊN CỨU)
 
     // Khởi tạo hệ thống USB (Địa chỉ MMIO mẫu)
