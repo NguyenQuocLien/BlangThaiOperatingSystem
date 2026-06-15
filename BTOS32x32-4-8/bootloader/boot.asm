@@ -8,25 +8,30 @@ start:
     mov ss, ax
     mov sp, 0x7c00
 
-    ; Bật A20
+    ; === Bật A20 ===
     in al, 0x92
     or al, 2
     out 0x92, al
 
-    ; =====================================================
-    ; NẠP stage2/entry.bin
-    ; Đọc từ sector 2, số sector có thể chỉnh bên dưới
-    ; =====================================================
-    mov bx, 0x10000         ; Địa chỉ nạp Stage 2 (an toàn hơn 0x1000)
-    mov ah, 0x02            ; Đọc sector
-    mov al, 64              ; ← SỐ SECTOR CẦN ĐỌC (chỉnh ở đây)
+    ; === Khởi tạo VBE (1024x768, 32-bit) ===
+    mov ax, 0x4F02
+    mov bx, 0x4118          ; Chế độ VBE mong muốn
+    int 0x10
+
+    ; === Nạp stage2/entry.bin ===
+    mov bx, 0x10000         ; Địa chỉ nạp Stage 2
+    mov ah, 0x02            ; Hàm đọc sector
+    mov al, 64              ; Số sector cần đọc (có thể chỉnh)
     mov ch, 0
     mov cl, 2               ; Bắt đầu từ sector 2
     mov dh, 0
     mov dl, 0x80            ; Ổ cứng đầu tiên
     int 0x13
 
-    ; Chuyển Protected Mode
+    ; === Kiểm tra lỗi đọc đĩa (Carry Flag) ===
+    jc disk_error           ; Nếu CF = 1 → lỗi
+
+    ; === Chuyển sang Protected Mode ===
     cli
     lgdt [gdt_descriptor]
 
@@ -35,6 +40,12 @@ start:
     mov cr0, eax
 
     jmp CODE_SEG:init_pm
+
+; =====================================================
+; Xử lý lỗi đọc đĩa (không in text)
+; =====================================================
+disk_error:
+    hlt                     ; Dừng CPU nếu đọc đĩa lỗi
 
 ; =====================================================
 ; PROTECTED MODE
@@ -50,7 +61,7 @@ init_pm:
     mov esp, 0x90000
 
     ; Nhảy vào Stage 2
-    jmp 0x10000             ; Phải khớp với địa chỉ nạp ở trên
+    jmp 0x10000
 
 ; =====================================================
 ; GDT
