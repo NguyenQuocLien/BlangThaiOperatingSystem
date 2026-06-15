@@ -13,23 +13,54 @@ start:
     or al, 2
     out 0x92, al
 
-    ; === Khởi tạo VBE (1024x768, 32-bit) ===
+    ; === Khởi tạo VBE + Lưu Mode Info Block ===
     mov ax, 0x4F02
-    mov bx, 0x4118          ; Chế độ VBE mong muốn
+    mov bx, 0x4118
     int 0x10
+    cmp ax, 0x004F
+    jne error_handler
 
-    ; === Nạp stage2/entry.bin ===
-    mov bx, 0x10000         ; Địa chỉ nạp Stage 2
-    mov ah, 0x02            ; Hàm đọc sector
-    mov al, 64              ; Số sector cần đọc (có thể chỉnh)
+    ; Lưu VBE Mode Info Block vào 0x7E00 (Chiếm vùng từ 0x7E00 -> 0x7F00)
+    mov ax, 0x4F01
+    mov cx, 0x4118
+    mov di, 0x7E00
+    int 0x10
+    cmp ax, 0x004F
+    jne error_handler
+
+    ; === Đọc E820 Memory Map ===
+    ; Sắp xếp lại: Đưa số lượng entry và dữ liệu lên vùng 0x8000 để tránh xung đột
+    mov di, 0x8004                ; Danh sách các entry bắt đầu lưu từ 0x8004
+    xor ebx, ebx
+    mov word [0x8000], 0          ; Địa chỉ 0x8000 sẽ lưu số lượng entry E820
+
+e820_loop:
+    mov eax, 0xE820
+    mov edx, 0x534D4150           ; 'SMAP'
+    mov ecx, 24
+    int 0x15
+    jc error_handler
+
+    cmp eax, 0x534D4150           ; Kiểm tra chữ ký hợp lệ
+    jne error_handler
+
+    add di, 24
+    inc word [0x8000]             ; Tăng số lượng entry lưu tại địa chỉ 0x8000
+    test ebx, ebx
+    jnz e820_loop
+
+    ; === Nạp stage2/entry.bin (128 sectors) ===
+    mov ax, 0x1000
+    mov es, ax
+    xor bx, bx                    ; ES:BX = 0x1000:0x0000 -> Địa chỉ vật lý 0x10000
+    mov ah, 0x02
+    mov al, 128
     mov ch, 0
-    mov cl, 2               ; Bắt đầu từ sector 2
+    mov cl, 2
     mov dh, 0
-    mov dl, 0x80            ; Ổ cứng đầu tiên
+    mov dl, 0x80                  ; Đọc từ ổ đĩa cứng đầu tiên
     int 0x13
-
-    ; === Kiểm tra lỗi đọc đĩa (Carry Flag) ===
-    jc disk_error           ; Nếu CF = 1 → lỗi
+    jc error_handler
 
     ; === Chuyển sang Protected Mode ===
     cli
@@ -42,13 +73,14 @@ start:
     jmp CODE_SEG:init_pm
 
 ; =====================================================
-; Xử lý lỗi đọc đĩa (không in text)
+; Xử lý lỗi tập trung
 ; =====================================================
-disk_error:
-    hlt                     ; Dừng CPU nếu đọc đĩa lỗi
+error_handler:
+    hlt
+    jmp error_handler
 
 ; =====================================================
-; PROTECTED MODE
+; PROTECTED MODE (32-bit)
 ; =====================================================
 BITS 32
 init_pm:
@@ -60,8 +92,12 @@ init_pm:
     mov ss, ax
     mov esp, 0x90000
 
-    ; Nhảy vào Stage 2
-    jmp 0x10000
+    ; Truyền boot drive sang Stage 2
+    movzx eax, dl
+    push eax
+
+    ; Nhảy vào Stage 2 (Sửa lỗi ép kiểu dword cho con trỏ 32-bit nhảy xa)
+    jmp CODE_SEG:dword 0x10000
 
 ; =====================================================
 ; GDT
