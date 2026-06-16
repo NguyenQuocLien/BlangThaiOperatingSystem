@@ -90,6 +90,7 @@ extern fat32_load_file
 extern pit_get_ticks
 extern pit_init
 extern show_main_menu           ; Từ menu.asm
+extern boot_drive_global        ; Thêm vào phần extern
 
 ; =====================================================
 ; SECTION TEXT
@@ -158,6 +159,9 @@ stage2_entry:
     push dword 0
     call print_string_at_color
     add esp, 16
+ 
+    mov eax, [boot_drive]
+    mov [boot_drive_global], eax    ; Sync sang menu.asm
     call show_main_menu     ; Từ menu.asm, không return
     jmp .main_loop          ; Safety
 
