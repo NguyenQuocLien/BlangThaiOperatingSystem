@@ -112,7 +112,17 @@ e820_done:
     or eax, 1
     mov cr0, eax
 
-    jmp CODE_SEG:init_pm
+; Cần thêm label này ngay trước jmp CODE_SEG:init_pm
+; Tức là: F1 bị ấn -> set boot state -> vẫn phải vào PM -> vào Stage 2
+; (Stage 2 tự đọc BOOT_STATE_ADDR và gọi show_main_menu)
+
+continue_to_stage2:         ; ← Thêm label này
+    cli
+    lgdt [gdt_descriptor]
+    mov eax, cr0
+    or eax, 1
+    mov cr0, eax
+    jmp CODE_SEG:init_pm    ; Vào PM bình thường, Stage 2 tự xử lý
 
 ; =====================================================
 ; Xử lý lỗi (in 'E')
