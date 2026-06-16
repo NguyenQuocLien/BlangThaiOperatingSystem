@@ -115,11 +115,24 @@ stage2_entry:
     mov [selected_language], eax
 
     ; --- Bước 8: Load kernel với ngôn ngữ đã chọn ---
+    ; Sau khi load kernel thành công, kernel tự nhảy đi
+    ; Nếu kernel load fail -> vào menu thay vì halt
     push dword [selected_language]
     call load_kernel_with_language
     add esp, 4
     test eax, eax
-    jnz .kernel_load_failed
+    jz .main_loop          ; Kernel tự jump, không return ở đây
+
+    ; Kernel load thất bại -> vào menu để người dùng xử lý
+.kernel_load_failed:
+    mov byte [BOOT_STATE_ADDR], BOOT_STATE_INTERRUPTED
+    push dword COLOR_ERROR
+    push dword err_kernel_load
+    push dword 24
+    push dword 0
+    call print_string_at_color
+    add esp, 16
+    call show_main_menu     ; Vào menu thay vì halt
 
     ; --- Không nên đến đây (kernel đã nhảy đi) ---
 .main_loop:
@@ -136,14 +149,15 @@ stage2_entry:
     jmp .halt
 
 .lang_load_failed:
-    ; Dùng ngôn ngữ mặc định, không dừng
+    ; Điền default entry (English) — giữ nguyên như cũ
+    push dword COLOR_WARNING          ; Thêm: báo người dùng biết
     push dword warn_lang_default
     push dword 2
     push dword 0
-    call print_string_at
-    add esp, 12
+    call print_string_at_color
+    add esp, 16
+
     mov dword [language_count], 1
-    ; Điền entry mặc định (English)
     mov dword [lang_table_ptr], LANG_TABLE_ADDR
     mov esi, default_lang_name
     mov edi, LANG_TABLE_ADDR
@@ -153,19 +167,22 @@ stage2_entry:
     mov edi, LANG_TABLE_ADDR + LANG_NAME_MAX_LEN
     mov ecx, LANG_CODE_LEN
     call strncpy_safe
-    jmp .do_menu
 
-.kernel_load_failed:
-    push dword err_kernel_load
-    push dword 24
-    push dword 0
-    call print_error
-    add esp, 12
-    jmp .halt
+    ; KHÔNG jmp .do_menu nữa — fall through vào menu chính
+    ; vì .do_menu cũ đã lỗi thời sau khi có menu.asm
 
 .do_menu:
-    call show_boot_menu
-    mov [selected_language], eax
+    ; Đặt boot state = INTERRUPTED để item [1] Resume có ý nghĩa
+    ; (hoặc NORMAL nếu đây là lần đầu boot)
+    mov byte [BOOT_STATE_ADDR], BOOT_STATE_NORMAL
+
+    call show_main_menu     ; Từ menu.asm — không bao giờ return
+                            ; vì show_main_menu tự quản lý vòng lặp
+
+    ; Không bao giờ đến đây, nhưng để an toàn:
+.main_loop:
+    cli
+    hlt
     jmp .main_loop
 
 .halt:
