@@ -91,11 +91,89 @@ stage2_entry:
     mov esp, STACK_TOP
     mov ebp, esp
 
+; Thêm constant
+F1_SCANCODE     equ 0x3B
+BOOT_STATE_ADDR equ 0x7FFC
+
+; Macro kiểm tra F1 (dùng nhiều lần)
+%macro CHECK_F1_INTERRUPT 0
+    in al, 0x64             ; Keyboard status port
+    test al, 1              ; Output buffer full?
+    jz %%no_key
+    in al, 0x60             ; Đọc scan code
+    cmp al, F1_SCANCODE
+    jne %%no_key
+    mov byte [BOOT_STATE_ADDR], BOOT_STATE_INTERRUPTED
+    jmp boot_interrupted    ; Nhảy tới handler tập trung
+%%no_key:
+%endmacro
+
+; Handler tập trung (đặt trước .main_loop)
+boot_interrupted:
+    ; Hiện thông báo ngắn trước khi vào menu
+    push dword COLOR_WARNING
+    push dword str_boot_interrupted
+    push dword 12
+    push dword 15
+    call print_string_at_color
+    add esp, 16
+
+    ; Delay ngắn để người dùng thấy thông báo
+    call pit_get_ticks
+    add eax, 36             ; ~2 giây
+    mov [temp_tick], eax
+.wait:
+    call pit_get_ticks
+    cmp eax, [temp_tick]
+    jl .wait
+
+    call show_main_menu     ; Vào menu, không return
+    jmp .main_loop          ; Safety
+
     ; --- Bước 3: Clear màn hình VGA ---
     call clear_screen
 
     ; --- Bước 4: Khởi tạo PIT (cần cho timeout menu) ---
     call pit_init
+
+; Thêm constant
+F1_SCANCODE     equ 0x3B
+BOOT_STATE_ADDR equ 0x7FFC
+
+; Macro kiểm tra F1 (dùng nhiều lần)
+%macro CHECK_F1_INTERRUPT 0
+    in al, 0x64             ; Keyboard status port
+    test al, 1              ; Output buffer full?
+    jz %%no_key
+    in al, 0x60             ; Đọc scan code
+    cmp al, F1_SCANCODE
+    jne %%no_key
+    mov byte [BOOT_STATE_ADDR], BOOT_STATE_INTERRUPTED
+    jmp boot_interrupted    ; Nhảy tới handler tập trung
+%%no_key:
+%endmacro
+
+; Handler tập trung (đặt trước .main_loop)
+boot_interrupted:
+    ; Hiện thông báo ngắn trước khi vào menu
+    push dword COLOR_WARNING
+    push dword str_boot_interrupted
+    push dword 12
+    push dword 15
+    call print_string_at_color
+    add esp, 16
+
+    ; Delay ngắn để người dùng thấy thông báo
+    call pit_get_ticks
+    add eax, 36             ; ~2 giây
+    mov [temp_tick], eax
+.wait:
+    call pit_get_ticks
+    cmp eax, [temp_tick]
+    jl .wait
+
+    call show_main_menu     ; Vào menu, không return
+    jmp .main_loop          ; Safety
 
     ; --- Bước 5: Khởi tạo FAT32 với boot drive ---
     push dword [boot_drive]
@@ -104,10 +182,88 @@ stage2_entry:
     test eax, eax
     jnz .fat32_init_failed
 
+; Thêm constant
+F1_SCANCODE     equ 0x3B
+BOOT_STATE_ADDR equ 0x7FFC
+
+; Macro kiểm tra F1 (dùng nhiều lần)
+%macro CHECK_F1_INTERRUPT 0
+    in al, 0x64             ; Keyboard status port
+    test al, 1              ; Output buffer full?
+    jz %%no_key
+    in al, 0x60             ; Đọc scan code
+    cmp al, F1_SCANCODE
+    jne %%no_key
+    mov byte [BOOT_STATE_ADDR], BOOT_STATE_INTERRUPTED
+    jmp boot_interrupted    ; Nhảy tới handler tập trung
+%%no_key:
+%endmacro
+
+; Handler tập trung (đặt trước .main_loop)
+boot_interrupted:
+    ; Hiện thông báo ngắn trước khi vào menu
+    push dword COLOR_WARNING
+    push dword str_boot_interrupted
+    push dword 12
+    push dword 15
+    call print_string_at_color
+    add esp, 16
+
+    ; Delay ngắn để người dùng thấy thông báo
+    call pit_get_ticks
+    add eax, 36             ; ~2 giây
+    mov [temp_tick], eax
+.wait:
+    call pit_get_ticks
+    cmp eax, [temp_tick]
+    jl .wait
+
+    call show_main_menu     ; Vào menu, không return
+    jmp .main_loop          ; Safety
+
     ; --- Bước 6: Load và parse danh sách ngôn ngữ ---
     call load_language_list
     test eax, eax
     jnz .lang_load_failed
+
+; Thêm constant
+F1_SCANCODE     equ 0x3B
+BOOT_STATE_ADDR equ 0x7FFC
+
+; Macro kiểm tra F1 (dùng nhiều lần)
+%macro CHECK_F1_INTERRUPT 0
+    in al, 0x64             ; Keyboard status port
+    test al, 1              ; Output buffer full?
+    jz %%no_key
+    in al, 0x60             ; Đọc scan code
+    cmp al, F1_SCANCODE
+    jne %%no_key
+    mov byte [BOOT_STATE_ADDR], BOOT_STATE_INTERRUPTED
+    jmp boot_interrupted    ; Nhảy tới handler tập trung
+%%no_key:
+%endmacro
+
+; Handler tập trung (đặt trước .main_loop)
+boot_interrupted:
+    ; Hiện thông báo ngắn trước khi vào menu
+    push dword COLOR_WARNING
+    push dword str_boot_interrupted
+    push dword 12
+    push dword 15
+    call print_string_at_color
+    add esp, 16
+
+    ; Delay ngắn để người dùng thấy thông báo
+    call pit_get_ticks
+    add eax, 36             ; ~2 giây
+    mov [temp_tick], eax
+.wait:
+    call pit_get_ticks
+    cmp eax, [temp_tick]
+    jl .wait
+
+    call show_main_menu     ; Vào menu, không return
+    jmp .main_loop          ; Safety
 
     ; --- Bước 7: Hiển thị menu và lấy lựa chọn ---
     call show_boot_menu
