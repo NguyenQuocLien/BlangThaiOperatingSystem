@@ -20,6 +20,20 @@ start:
     out 0x92, al
 a20_done:
 
+; === Sau khi bật A20, trước khi load Stage 2 ===
+; Kiểm tra F1 (non-blocking)
+    mov ah, 0x01            ; BIOS: Check keystroke buffer
+    int 0x16
+    jz .no_key_stage1       ; ZF=1 = không có phím
+    mov ah, 0x00
+    int 0x16                ; Đọc phím ra khỏi buffer
+    cmp ah, 0x3B            ; Scan code F1 = 0x3B
+    jne .no_key_stage1
+    ; F1 được ấn -> set boot state và tiếp tục vào Stage 2
+    mov byte [0x7FFC], 0x01 ; BOOT_STATE_INTERRUPTED
+    jmp continue_to_stage2  ; Bỏ qua load kernel, vào menu ngay
+.no_key_stage1:
+
     ; === Đọc E820 Memory Map ===
     xor ax, ax
     mov es, ax
