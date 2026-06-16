@@ -61,6 +61,11 @@ COLOR_WARNING           equ 0x0C        ; Đỏ sáng
 COLOR_SUCCESS           equ 0x0A        ; Xanh lá sáng
 COLOR_PARTITION_WARN    equ 0x4F        ; Trắng trên đỏ (nguy hiểm!)
 
+; Thêm vào phần CONSTANTS của menu.asm:
+VGA_COLS        equ 80
+VGA_ROWS        equ 25
+COLOR_TITLE     equ 0x0F
+
 ; =====================================================
 ; EXPORTS
 ; =====================================================
