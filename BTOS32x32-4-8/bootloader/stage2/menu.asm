@@ -978,22 +978,22 @@ file_settings:  db "SETTINGS.BIN", 0
 file_editing:   db "EDITING.BIN", 0
 
 ; Header
-str_header_title:   db "BTOS Bootloader v2.1 / Fannlaangtay Tsautzuoh shihtoong Yiindao jeatzay cherngshiuh ", 0
-str_header_version: db "Build 2025 | Protected Mode 32-bit", 0
+str_header_title:   db "FTS YJC b1.0 / BTOS Bootloader v1.0", 0
+str_header_version: db "Jianntzaw 2026 | 32-wey Baohuh Moshih / Build 2026 | Protected Mode 32-bit", 0
 str_line_single:
     db "--------------------------------------------------------------------------------", 0
 
 ; Boot state
 str_state_normal:
-    db "Status: System initialized normally", 0
+    db "Juanqtay : Shihtoong yii jenqcharng chushyyhuah / Status : System initialized normally", 0
 str_state_interrupted:
-    db "Status: [!] Boot was interrupted - press 1 to resume", 0
+    db "Juanqtay : [!] Chiidonq yii jongduann - ann 1 hueifuh / Status : [!] Boot was interrupted - press 1 to resume", 0
 str_state_settings:
-    db "Status: Boot configuration mode", 0
+    db "Juanqtay :  Chiidonq peyjyh moshyh / Status : Boot configuration mode", 0
 
 ; Menu items
 str_item1_key:  db "[1]", 0
-str_item1_name: db " Resume Boot", 0
+str_item1_name: db " Hueifuh Chiidonq / Resume Boot", 0
 str_item1_desc: db "    Continue the interrupted boot process", 0
 
 str_item2_key:  db "[2]", 0
