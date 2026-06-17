@@ -994,11 +994,11 @@ str_state_settings:
 ; Menu items
 str_item1_key:  db "[1]", 0
 str_item1_name: db " Hueifuh Chiidonq / Resume Boot", 0
-str_item1_desc: db "    Continue the interrupted boot process", 0
+str_item1_desc: db "    Jihshiuh jongduann .de chiidonq guohcherng / Continue the interrupted boot process", 0
 
 str_item2_key:  db "[2]", 0
-str_item2_name: db " Change Language", 0
-str_item2_desc: db "    Select display language for OS Bootloader", 0
+str_item2_name: db " Genggae Yeuyan / Change Language", 0
+str_item2_desc: db "    Sheuantzer YJC .de sheanshyh yeuyan / Select display language for Bootloader", 0
 
 str_item3_key:  db "[3]", 0
 str_item3_name: db " Boot Settings", 0
